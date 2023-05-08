@@ -1,0 +1,87 @@
+.pnpm_usage: &pnpm_usage
+  - corepack enable
+  - corepack prepare pnpm@latest-7 --activate
+  - pnpm config set store-dir .pnpm-store
+  - pnpm install
+
+stages:
+  - install
+  - tests
+  - build
+
+install:
+  stage: install
+  image: node:16
+  script:
+    - *pnpm_usage
+  cache:
+    key:
+      files:
+        - pnpm-lock.yaml
+    paths:
+      - .pnpm-store
+
+eslint:
+  stage: tests
+  image: node:16
+  dependencies:
+    - install
+  before_script:
+    - *pnpm_usage
+  cache:
+    - key:
+        files:
+          - pnpm-lock.yaml
+        prefix: pnpm-cache
+      paths:
+        - .pnpm-cache
+      policy: pull
+  script:
+    - pnpm lint
+
+vitest:
+  stage: tests
+  image: node:16
+  dependencies:
+    - install
+  before_script:
+    - *pnpm_usage
+  cache:
+    - key:
+        files:
+          - pnpm-lock.yaml
+        prefix: pnpm-cache
+      paths:
+        - .pnpm-cache
+      policy: pull
+  script:
+    - pnpm test:ci
+  artifacts:
+    when: always
+    reports:
+      junit:
+        - reports/vitest.xml
+
+coverage:
+  stage: tests
+  image: node:16
+  coverage: /All files[^|]*\|[^|]*\s+([\d\.]+)/
+  dependencies:
+    - install
+  before_script:
+    - *pnpm_usage
+  cache:
+    - key:
+        files:
+          - pnpm-lock.yaml
+        prefix: pnpm-cache
+      paths:
+        - .pnpm-cache
+      policy: pull
+  script:
+    - pnpm coverage
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage/cobertura-coverage.xml
