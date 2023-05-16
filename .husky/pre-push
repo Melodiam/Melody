@@ -1,5 +1,6 @@
 #!/bin/sh
 . "$(dirname "$0")/_/husky.sh"
 
-# npx tsc --skipLibCheck --noUnusedLocals --noUnusedParameters
+# Linting, Unit Testing, Coverage
+npx tsc --skipLibCheck --noUnusedLocals --noUnusedParameters
 pnpm test:pre-push
